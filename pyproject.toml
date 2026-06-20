@@ -28,6 +28,8 @@ train = [
     "scipy>=1.14",
     "matplotlib>=3.9",
     "tqdm>=4.66",
+    "onnx>=1.16",       # torch.onnx.export / ultralytics export need the onnx package
+    "onnxslim>=0.1",    # ultralytics YOLO export simplify
 ]
 baselines = [
     "pytesseract>=0.3.13",
