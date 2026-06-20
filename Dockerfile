@@ -15,7 +15,10 @@ COPY pyproject.toml uv.lock ./
 RUN uv sync --frozen --no-install-project --no-dev
 
 COPY app ./app
-COPY models/onnx ./models/onnx
+# Only the recognizer ONNX + the calibration json (temperature + serving threshold) are
+# needed at runtime; the YOLO ONNX is a training-time artifact and stays out of the image.
+COPY models/onnx/crnn.onnx ./models/onnx/crnn.onnx
+COPY models/calibration.json ./models/calibration.json
 COPY samples ./samples
 RUN uv sync --frozen --no-dev
 
