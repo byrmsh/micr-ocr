@@ -55,6 +55,8 @@ def main() -> None:
     args = ap.parse_args()
 
     images = sorted((args.val / "images" / "val").glob("*.png"))[: args.limit]
+    if not images:
+        raise SystemExit(f"no images under {args.val / 'images' / 'val'}; generate the YOLO dataset first")
     gts, classical = [], []
     for img_path in images:  # stream: the classical pass is the only consumer of the pixels
         gray = cv2.imread(str(img_path), cv2.IMREAD_GRAYSCALE)

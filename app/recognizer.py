@@ -33,7 +33,13 @@ def serving_params(calib_path: Path = _DEFAULT_CALIB) -> tuple[float, float]:
     Falls back to (1.0, 0.5) when uncalibrated so the pipeline still runs.
     """
     calib = json.loads(Path(calib_path).read_text()) if Path(calib_path).exists() else {}
-    return float(calib.get("temperature", 1.0)), float(calib.get("serving_threshold", 0.5))
+    temperature = float(calib.get("temperature", 1.0))
+    if temperature <= 0:  # a non-positive temperature divides to nan or flips the argmax
+        temperature = 1.0
+    # Prefer the balanced serving point; fall back to the strict `threshold` (same scaled space)
+    # rather than the raw 0.5, so a partial calibration file never pairs scaled confidence with it.
+    threshold = float(calib.get("serving_threshold", calib.get("threshold", 0.5)))
+    return temperature, threshold
 
 
 def preprocess_band(gray: np.ndarray) -> np.ndarray:
@@ -55,7 +61,12 @@ class MicrResult:
 
 def run_pipeline(gray: np.ndarray, recognizer: Recognizer, route_threshold: float = 0.5) -> MicrResult:
     crop, bbox = localize_band(gray)
-    text, _, conf = recognizer(crop)
+    if crop.size == 0:  # degenerate localizer crop: don't feed a 0-dim array to the recognizer
+        text, conf = "", 0.0
+    else:
+        text, _, conf = recognizer(crop)
+        if not text:  # an empty read is maximally uncertain, not the 1.0 the decoder returns for it
+            conf = 0.0
     return MicrResult(
         micr=text,
         fields=parse_fields(text),

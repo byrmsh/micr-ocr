@@ -111,6 +111,10 @@ def main() -> None:
     curve = coverage_accuracy(cal, correct)
     strict = pick_threshold(curve, args.target_acc)
     serving = pick_threshold(curve, args.serving_acc)
+    for name, op, tgt in (("strict", strict, args.target_acc), ("serving", serving, args.serving_acc)):
+        if op["accuracy"] < tgt:  # pick_threshold fell back to the last point; flag it loudly
+            print(f"WARNING: no {name} threshold reaches target {tgt:.0%} (best {op['accuracy']:.1%} at "
+                  f"coverage {op['coverage']:.1%}); using highest threshold, which routes nearly everything.")
 
     result = {
         "split": args.split,

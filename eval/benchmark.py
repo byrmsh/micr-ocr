@@ -46,6 +46,8 @@ def _build(name: str):
     if name == "crnn":
         from eval.torch_recognizer import TorchRecognizer
 
+        # No temperature: this ladder scores CER/exact-match (argmax-invariant). If a routing
+        # column is ever added here, pass the calibrated temperature or it will threshold raw.
         return TorchRecognizer()
     if name == "template":
         from eval.baselines import TemplateMatcher
