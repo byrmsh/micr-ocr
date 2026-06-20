@@ -91,7 +91,8 @@ def main() -> None:
     ap.add_argument("--ckpt", type=Path, default=Path("models/crnn.pt"))
     ap.add_argument("--data", type=Path, default=Path("data"))
     ap.add_argument("--split", default="heldout")
-    ap.add_argument("--target-acc", type=float, default=0.99)
+    ap.add_argument("--target-acc", type=float, default=0.99, help="strict near-certainty operating point")
+    ap.add_argument("--serving-acc", type=float, default=0.975, help="balanced operating point the runtime uses")
     ap.add_argument("--out", type=Path, default=Path("models/calibration.json"))
     args = ap.parse_args()
 
@@ -108,7 +109,8 @@ def main() -> None:
     ece_raw, _ = ece(raw, correct)
     ece_cal, reliability = ece(cal, correct)
     curve = coverage_accuracy(cal, correct)
-    op = pick_threshold(curve, args.target_acc)
+    strict = pick_threshold(curve, args.target_acc)
+    serving = pick_threshold(curve, args.serving_acc)
 
     result = {
         "split": args.split,
@@ -117,17 +119,27 @@ def main() -> None:
         "temperature": temperature,
         "ece_raw": ece_raw,
         "ece_calibrated": ece_cal,
+        # `serving_*` is the operating point the runtime applies (balanced auto-accept vs review).
+        # `threshold` is the strict near-certainty point, kept for the writeup. Both are on the
+        # temperature-scaled confidence; the recognizer applies `temperature` so serving thresholds
+        # in the same space these were picked in.
+        "serving_target_accuracy": args.serving_acc,
+        "serving_threshold": serving["threshold"],
+        "serving_coverage": serving["coverage"],
+        "serving_accuracy": serving["accuracy"],
         "target_accuracy": args.target_acc,
-        "threshold": op["threshold"],
-        "coverage_at_threshold": op["coverage"],
-        "accuracy_at_threshold": op["accuracy"],
+        "threshold": strict["threshold"],
+        "coverage_at_threshold": strict["coverage"],
+        "accuracy_at_threshold": strict["accuracy"],
         "reliability": reliability,
         "coverage_accuracy": curve,
     }
     args.out.write_text(json.dumps(result, indent=2))
     print(
         f"T={temperature:.2f} | ECE {ece_raw:.3f}->{ece_cal:.3f} | "
-        f"route<{op['threshold']:.2f}: auto-accept {op['coverage']:.1%} at {op['accuracy']:.1%} acc "
+        f"serving route<{serving['threshold']:.2f}: auto-accept {serving['coverage']:.1%} at "
+        f"{serving['accuracy']:.1%} (target {args.serving_acc:.0%}) | "
+        f"strict route<{strict['threshold']:.2f}: {strict['coverage']:.1%} at {strict['accuracy']:.1%} "
         f"(target {args.target_acc:.0%}) -> {args.out}"
     )
     _plot(reliability, curve, args.out.with_suffix(".png"))

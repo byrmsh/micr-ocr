@@ -90,9 +90,9 @@ Character error rate by tier, in-distribution test split:
 
 | recognizer          | clean | medium | hard  |
 |---------------------|-------|--------|-------|
-| Tesseract (stock)   | 0.63  | 0.66   | 0.89  |
-| template (classical)| 0.10  | 0.65   | 0.81  |
-| CRNN                | 0.00  | 0.00   | 0.024 |
+| Tesseract (stock)   | 0.62  | 0.66   | 0.90  |
+| template (classical)| 0.10  | 0.64   | 0.82  |
+| CRNN                | 0.00  | 0.00   | 0.023 |
 
 Two honest readings of that table. First, stock OCR cannot read this font, full stop; that row
 is a labeled data point, not a baseline anyone is "beating." Second, the classical matcher is
@@ -126,7 +126,11 @@ probability, it is the tradeoff curve. On the held-out generator, 92.1 percent o
 correct with no routing; routing the least-confident 6 percent to a human raises auto-accept
 accuracy to 96.9 percent; a balanced operating point routes about 13 percent and auto-accepts
 the rest at 97.8 percent; and if you need near-certainty you can auto-accept only the most
-confident quarter at 99.8 percent and send everything else to review.
+confident quarter at 99.8 percent and send everything else to review. The deployed service ships the
+balanced point: a read auto-accepts when its temperature-scaled confidence clears 0.92, and everything
+below that is flagged for a person. One consequence worth stating, because it is easy to get wrong: the
+confidence the API returns is the calibrated number, computed at the fitted temperature, not the raw
+peaky softmax, so the threshold is applied in the same space the curve was drawn in.
 
 The honest claim here is the method, not the threshold. The temperature and the operating point
 are fit on a generator I made up; on a client's real check stream they would have to be
@@ -145,7 +149,21 @@ similar marks near the bottom of a check.
 I also trained a learned detector, YOLO11n fine-tuned on synthetic checks, both because it is the
 honest answer to "have you fine-tuned YOLO" and because it makes the comparison concrete.
 
-<!-- TODO: fill from eval.detect_eval: classical mean IoU / IoU@0.5 vs YOLO mean IoU / mAP50. -->
+On 800 held-out synthetic checks, scoring each detector by the IoU of its box against the ground
+truth band:
+
+| detector  | mean IoU | IoU>=0.5 | IoU>=0.7 | IoU>=0.9 |
+|-----------|----------|----------|----------|----------|
+| classical | 0.70     | 0.83     | 0.52     | 0.21     |
+| YOLO11n   | 0.75     | 0.83     | 0.82     | 0.56     |
+
+The honest headline is the first two columns: at a loose IoU>=0.5 the two are even, both finding the
+band on 83 percent of checks. The classical method is not a strawman; on a well-formed check it finds
+the right region about as often as the learned one. The gap is in tightness. At IoU>=0.7 the classical
+localizer holds 52 percent against YOLO's 82, and at IoU>=0.9 it is 21 against 56. YOLO draws a box
+that hugs the band; the classical one finds the region but leaves looser, more variable margins, which
+is exactly the slack the recognizer's crop-jitter augmentation was added to absorb. That is why the
+classical localizer is good enough to serve: the recognizer was trained not to care about the margin.
 
 The trade is the expected one. The classical localizer is free, license-clean, and good enough on
 well-formed checks, and it degrades on the skewed, cluttered ones. The learned detector is more
@@ -175,9 +193,12 @@ line, the parsed fields, a confidence, a route-to-human flag, and the band's bou
 
 It is worth being precise about the edges. The accuracy numbers are on synthetic data; the
 synthetic-to-real gap is real and unmeasured at scale here. As a qualitative check I ran the
-pipeline on a handful of public-domain checks from Wikimedia, and
-
-<!-- TODO: one honest sentence on how the real-check qualitative test went. -->
+pipeline on six public-domain checks from Wikimedia, and the result is the honest one: none of them
+read cleanly end to end, and the confidence layer routed every one to review. On a real scan the
+classical localizer often locks onto the wrong row, and where it does find the band the recognizer
+stumbles on the distance between my synthetic font and real magnetic-ink printing. That the routing
+flagged all six is the system behaving as intended when it is out of distribution; it is not the same
+as reading them, and the demo shows these failures rather than hiding them.
 
 E-13B is a small, rigid alphabet, so none of this transfers to general document OCR as-is, and I
 am not claiming it does. The confidence threshold is calibrated on my generator, not a

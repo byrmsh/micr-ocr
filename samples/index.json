@@ -1,0 +1,192 @@
+[
+  {
+    "label": "Synthetic check",
+    "image": "check_normal.png",
+    "micr": "T938520835T34235214-3233253",
+    "fields": {
+      "routing": "938520835",
+      "account": null,
+      "check_number": null,
+      "amount": null
+    },
+    "confidence": 0.8479,
+    "route_to_human": true,
+    "band_bbox": [
+      67,
+      419,
+      935,
+      42
+    ]
+  },
+  {
+    "label": "Synthetic check (hard)",
+    "image": "check_hard.png",
+    "micr": "U821UT893205274T10552215973U",
+    "fields": {
+      "routing": "893205274",
+      "account": "10552215973",
+      "check_number": "821",
+      "amount": null
+    },
+    "confidence": 0.9515,
+    "route_to_human": false,
+    "band_bbox": [
+      35,
+      350,
+      938,
+      49
+    ]
+  },
+  {
+    "label": "Synthetic band (clean)",
+    "image": "band_clean.png",
+    "micr": "U9083UT902773231T6073737648UA0008430868A",
+    "fields": {
+      "routing": "902773231",
+      "account": "6073737648",
+      "check_number": "9083",
+      "amount": "0008430868"
+    },
+    "confidence": 0.9566,
+    "route_to_human": false,
+    "band_bbox": [
+      0,
+      0,
+      1123,
+      48
+    ]
+  },
+  {
+    "label": "Synthetic band (hard)",
+    "image": "band_hard.png",
+    "micr": "T641915017T554286017U640A0009809195A",
+    "fields": {
+      "routing": "641915017",
+      "account": "554286017",
+      "check_number": "640",
+      "amount": "0009809195"
+    },
+    "confidence": 0.9376,
+    "route_to_human": false,
+    "band_bbox": [
+      0,
+      0,
+      1147,
+      48
+    ]
+  },
+  {
+    "label": "Real check: blank_check",
+    "image": "real_blank_check.png",
+    "micr": "T73850789UTT60507058973",
+    "fields": {
+      "routing": null,
+      "account": null,
+      "check_number": null,
+      "amount": null
+    },
+    "confidence": 0.747,
+    "route_to_human": true,
+    "band_bbox": [
+      0,
+      560,
+      668,
+      43
+    ]
+  },
+  {
+    "label": "Real check: blank_check_spanish",
+    "image": "real_blank_check_spanish.png",
+    "micr": "U800",
+    "fields": {
+      "routing": null,
+      "account": null,
+      "check_number": "800",
+      "amount": null
+    },
+    "confidence": 0.7851,
+    "route_to_human": true,
+    "band_bbox": [
+      0,
+      403,
+      403,
+      132
+    ]
+  },
+  {
+    "label": "Real check: check1005",
+    "image": "real_check1005.png",
+    "micr": "U0008199U06",
+    "fields": {
+      "routing": null,
+      "account": null,
+      "check_number": "0008199",
+      "amount": null
+    },
+    "confidence": 0.4578,
+    "route_to_human": true,
+    "band_bbox": [
+      15,
+      141,
+      427,
+      40
+    ]
+  },
+  {
+    "label": "Real check: check_with_micr",
+    "image": "real_check_with_micr.png",
+    "micr": "U0-",
+    "fields": {
+      "routing": null,
+      "account": null,
+      "check_number": null,
+      "amount": null
+    },
+    "confidence": 0.5346,
+    "route_to_human": true,
+    "band_bbox": [
+      120,
+      658,
+      675,
+      186
+    ]
+  },
+  {
+    "label": "Real check: ford_gerald_signed_check",
+    "image": "real_ford_gerald_signed_check.png",
+    "micr": "U0U",
+    "fields": {
+      "routing": null,
+      "account": null,
+      "check_number": "0",
+      "amount": null
+    },
+    "confidence": 0.7798,
+    "route_to_human": true,
+    "band_bbox": [
+      103,
+      357,
+      591,
+      156
+    ]
+  },
+  {
+    "label": "Real check: canadian_cheque_diagram",
+    "image": "real_canadian_cheque_diagram.png",
+    "micr": "T088TT833U",
+    "fields": {
+      "routing": "088",
+      "account": null,
+      "check_number": null,
+      "amount": null
+    },
+    "confidence": 0.4857,
+    "route_to_human": true,
+    "band_bbox": [
+      755,
+      383,
+      525,
+      48
+    ]
+  }
+]

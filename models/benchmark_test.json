@@ -2,39 +2,39 @@
   "template": {
     "OVERALL": {
       "n": 3000,
-      "exact_match": 0.01633333333333333,
-      "cer": 0.762111062974195,
-      "acc_routing": 0.036,
-      "acc_account": 0.04733333333333333,
-      "acc_check_number": 0.04566666666666667,
-      "acc_amount": 0.03459915611814346
+      "exact_match": 0.034,
+      "cer": 0.5123915530820586,
+      "acc_routing": 0.12766666666666668,
+      "acc_account": 0.10566666666666667,
+      "acc_check_number": 0.2803333333333333,
+      "acc_amount": 0.3594936708860759
     },
     "clean": {
       "n": 1013,
-      "exact_match": 0.04639684106614018,
-      "cer": 0.6072706971856425,
-      "acc_routing": 0.1016781836130306,
-      "acc_account": 0.1332675222112537,
-      "acc_check_number": 0.13030602171767028,
-      "acc_amount": 0.10073710073710074
+      "exact_match": 0.09279368213228036,
+      "cer": 0.09648287412564448,
+      "acc_routing": 0.3228035538005923,
+      "acc_account": 0.2764067127344521,
+      "acc_check_number": 0.7265547877591313,
+      "acc_amount": 0.9385749385749386
     },
     "hard": {
       "n": 991,
-      "exact_match": 0.0,
-      "cer": 0.8604651162790697,
-      "acc_routing": 0.0,
-      "acc_account": 0.0,
-      "acc_check_number": 0.0,
-      "acc_amount": 0.0
+      "exact_match": 0.0010090817356205853,
+      "cer": 0.815209641826515,
+      "acc_routing": 0.007063572149344097,
+      "acc_account": 0.004036326942482341,
+      "acc_check_number": 0.013118062563067608,
+      "acc_amount": 0.01643835616438356
     },
     "medium": {
       "n": 996,
-      "exact_match": 0.002008032128514056,
-      "cer": 0.8224804914494438,
-      "acc_routing": 0.0050200803212851405,
-      "acc_account": 0.007028112449799197,
-      "acc_check_number": 0.0050200803212851405,
-      "acc_amount": 0.0
+      "exact_match": 0.007028112449799197,
+      "cer": 0.6367590901544081,
+      "acc_routing": 0.04919678714859438,
+      "acc_account": 0.03313253012048193,
+      "acc_check_number": 0.09236947791164658,
+      "acc_amount": 0.09200968523002422
     }
   },
   "crnn": {
@@ -77,36 +77,36 @@
   },
   "tesseract": {
     "OVERALL": {
-      "n": 400,
+      "n": 500,
       "exact_match": 0.0,
-      "cer": 0.7196449505945403,
+      "cer": 0.7188958527803707,
       "acc_routing": 0.0,
       "acc_account": 0.0,
       "acc_check_number": 0.0,
       "acc_amount": 0.0
     },
     "clean": {
-      "n": 144,
+      "n": 179,
       "exact_match": 0.0,
-      "cer": 0.6255445998624168,
+      "cer": 0.6233117483811286,
       "acc_routing": 0.0,
       "acc_account": 0.0,
       "acc_check_number": 0.0,
       "acc_amount": 0.0
     },
     "hard": {
-      "n": 123,
+      "n": 152,
       "exact_match": 0.0,
-      "cer": 0.8940433708482021,
+      "cer": 0.9000220701831825,
       "acc_routing": 0.0,
       "acc_account": 0.0,
       "acc_check_number": 0.0,
       "acc_amount": 0.0
     },
     "medium": {
-      "n": 133,
+      "n": 169,
       "exact_match": 0.0,
-      "cer": 0.6625190452006094,
+      "cer": 0.6588305017779533,
       "acc_routing": 0.0,
       "acc_account": 0.0,
       "acc_check_number": 0.0,

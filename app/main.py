@@ -35,17 +35,20 @@ app = FastAPI(
 
 
 @lru_cache(maxsize=1)
+def _calib() -> dict:
+    return json.loads(_CALIB.read_text()) if _CALIB.exists() else {}
+
+
+@lru_cache(maxsize=1)
 def _recognizer() -> OnnxRecognizer:
     if not _MODEL.exists():
         raise HTTPException(503, "model not bundled in this build")
-    return OnnxRecognizer(_MODEL)
+    return OnnxRecognizer(_MODEL, temperature=float(_calib().get("temperature", 1.0)))
 
 
 @lru_cache(maxsize=1)
 def _threshold() -> float:
-    if _CALIB.exists():
-        return float(json.loads(_CALIB.read_text()).get("threshold", 0.5))
-    return 0.5
+    return float(_calib().get("serving_threshold", 0.5))
 
 
 def _load_gray(data: bytes) -> np.ndarray:

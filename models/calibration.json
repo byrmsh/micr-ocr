@@ -3,30 +3,34 @@
   "n": 3000,
   "base_exact_match": 0.921,
   "temperature": 2.4,
-  "ece_raw": 0.05648315687974291,
-  "ece_calibrated": 0.06657941750685376,
-  "target_accuracy": 0.97,
-  "threshold": 0.92,
-  "coverage_at_threshold": 0.8673333333333333,
-  "accuracy_at_threshold": 0.9780937740199847,
+  "ece_raw": 0.056473347683747566,
+  "ece_calibrated": 0.066576773583889,
+  "serving_target_accuracy": 0.975,
+  "serving_threshold": 0.92,
+  "serving_coverage": 0.8673333333333333,
+  "serving_accuracy": 0.9780937740199847,
+  "target_accuracy": 0.99,
+  "threshold": 0.96,
+  "coverage_at_threshold": 0.26866666666666666,
+  "accuracy_at_threshold": 0.9975186104218362,
   "reliability": [
     {
-      "conf": 0.7304442286491394,
+      "conf": 0.7323116958141327,
       "acc": 0.0,
-      "n": 5
+      "n": 6
     },
     {
-      "conf": 0.8059287601047092,
+      "conf": 0.8070702417841498,
       "acc": 0.0,
-      "n": 54
+      "n": 53
     },
     {
-      "conf": 0.8931111439124687,
+      "conf": 0.893049720909212,
       "acc": 0.5979020979020979,
       "n": 286
     },
     {
-      "conf": 0.9506078752645216,
+      "conf": 0.9506028220029425,
       "acc": 0.976271186440678,
       "n": 2655
     }
@@ -224,13 +228,13 @@
     },
     {
       "threshold": 0.76,
-      "coverage": 0.9983333333333333,
-      "accuracy": 0.9225375626043406
+      "coverage": 0.998,
+      "accuracy": 0.9228456913827655
     },
     {
       "threshold": 0.78,
-      "coverage": 0.9956666666666667,
-      "accuracy": 0.9250083696016069
+      "coverage": 0.996,
+      "accuracy": 0.9246987951807228
     },
     {
       "threshold": 0.8,
@@ -249,8 +253,8 @@
     },
     {
       "threshold": 0.86,
-      "coverage": 0.9676666666666667,
-      "accuracy": 0.9517740268687565
+      "coverage": 0.9673333333333334,
+      "accuracy": 0.9517574086836664
     },
     {
       "threshold": 0.88,
@@ -269,17 +273,17 @@
     },
     {
       "threshold": 0.9400000000000001,
-      "coverage": 0.6433333333333333,
-      "accuracy": 0.9875647668393782
+      "coverage": 0.6436666666666667,
+      "accuracy": 0.9875712066286898
     },
     {
       "threshold": 0.96,
-      "coverage": 0.269,
-      "accuracy": 0.9975216852540273
+      "coverage": 0.26866666666666666,
+      "accuracy": 0.9975186104218362
     },
     {
       "threshold": 0.98,
-      "coverage": 0.020666666666666667,
+      "coverage": 0.02033333333333333,
       "accuracy": 1.0
     },
     {

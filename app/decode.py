@@ -21,7 +21,7 @@ def softmax(logits: np.ndarray) -> np.ndarray:
     return e / e.sum(axis=-1, keepdims=True)
 
 
-def greedy_decode(logits: np.ndarray) -> tuple[str, list[float], float]:
+def greedy_decode(logits: np.ndarray, temperature: float = 1.0) -> tuple[str, list[float], float]:
     """CTC greedy decode of one sequence's logits (T, N_LOGITS).
 
     Returns (text, per_char_confidences, sequence_confidence). Per-char confidence is the
@@ -29,8 +29,12 @@ def greedy_decode(logits: np.ndarray) -> tuple[str, list[float], float]:
     over emitted characters (1.0 for an empty read). Known CTC caveat: the blank-dominated,
     peaky softmax makes these good for *ranking* uncertainty, not as calibrated
     probabilities, until temperature-scaled (see eval/calibration).
+
+    `temperature` divides the logits before softmax. The decoded text is unchanged (argmax is
+    temperature-invariant); only the confidences are. Serving passes the calibration-fit
+    temperature so the returned confidence lives in the same space as the routing threshold.
     """
-    probs = softmax(logits)
+    probs = softmax(logits / temperature)
     best = probs.argmax(axis=1)
     chars: list[str] = []
     confs: list[float] = []

@@ -24,9 +24,9 @@ SAMPLES = _REPO / "samples"
 REAL = _REPO / "assets" / "real_samples"
 
 
-def _threshold() -> float:
+def _calib() -> dict:
     p = _REPO / "models" / "calibration.json"
-    return float(json.loads(p.read_text()).get("threshold", 0.5)) if p.exists() else 0.5
+    return json.loads(p.read_text()) if p.exists() else {}
 
 
 def _save(name: str, gray: np.ndarray) -> str:
@@ -36,8 +36,9 @@ def _save(name: str, gray: np.ndarray) -> str:
 
 
 def main() -> None:
-    rec = OnnxRecognizer(_REPO / "models" / "onnx" / "crnn.onnx")
-    thr = _threshold()
+    calib = _calib()
+    rec = OnnxRecognizer(_REPO / "models" / "onnx" / "crnn.onnx", temperature=float(calib.get("temperature", 1.0)))
+    thr = float(calib.get("serving_threshold", 0.5))
     entries: list[dict] = []
 
     synth = [

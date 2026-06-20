@@ -56,13 +56,14 @@ def run_pipeline(gray: np.ndarray, recognizer: Recognizer, route_threshold: floa
 class OnnxRecognizer:
     """onnxruntime CRNN backend for the served container (no torch)."""
 
-    def __init__(self, model_path: str | Path = "models/onnx/crnn.onnx"):
+    def __init__(self, model_path: str | Path = "models/onnx/crnn.onnx", temperature: float = 1.0):
         import onnxruntime as ort
 
         self.session = ort.InferenceSession(str(model_path), providers=["CPUExecutionProvider"])
         self.input_name = self.session.get_inputs()[0].name
+        self.temperature = temperature
 
     def __call__(self, gray_band: np.ndarray) -> tuple[str, list[float], float]:
         x = preprocess_band(gray_band)
         logits = self.session.run(None, {self.input_name: x})[0][0]  # (T, N_LOGITS)
-        return greedy_decode(logits)
+        return greedy_decode(logits, self.temperature)
