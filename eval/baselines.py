@@ -106,9 +106,3 @@ class TesseractBaseline:
             txt = ""
         cleaned = "".join(ch for ch in txt if ch.isdigit())
         return cleaned, [0.0] * len(cleaned), 0.0
-
-
-def _resize_h(img: np.ndarray, h: int) -> np.ndarray:
-    import cv2
-
-    return cv2.resize(img, (max(h, round(img.shape[1] * h / img.shape[0])), h), interpolation=cv2.INTER_AREA)
