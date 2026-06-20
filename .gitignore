@@ -11,6 +11,7 @@ wheels/
 
 # Generated datasets (regenerable from the synthetic pipeline; never committed)
 data/
+datasets/
 runs/
 
 # Model training artifacts (large; ONNX export is committed/released separately)

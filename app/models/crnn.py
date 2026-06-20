@@ -12,15 +12,10 @@ T = W/4 - 1 timesteps, comfortably longer than any MICR line.
 
 from __future__ import annotations
 
-import numpy as np
 import torch
 import torch.nn as nn
 
-from app.synth.glyphs import IDX_TO_CHAR, NUM_CLASSES
-
-INPUT_H = 32
-BLANK = NUM_CLASSES  # CTC blank index
-N_LOGITS = NUM_CLASSES + 1
+from app.decode import BLANK, INPUT_H, N_LOGITS, greedy_decode  # re-exported for callers
 
 
 def _conv(i: int, o: int, k: int = 3, s: int = 1, p: int = 1) -> nn.Sequential:
@@ -52,30 +47,4 @@ class CRNN(nn.Module):
         return self.fc(out)  # (B, T, N_LOGITS) logits
 
 
-def greedy_decode(logits: np.ndarray) -> tuple[str, list[float], float]:
-    """CTC greedy decode of one sequence's logits (T, N_LOGITS).
-
-    Returns (text, per_char_confidences, sequence_confidence). Per-char confidence is the
-    softmax prob at the timestep that emitted the character; sequence confidence is the
-    mean over emitted characters (1.0 for an empty read). Note the known CTC caveat: peaky,
-    blank-dominated softmax makes these scores useful for *ranking* uncertainty, not as
-    calibrated probabilities, until temperature-scaled (see eval/calibration).
-    """
-    probs = _softmax(logits)
-    best = probs.argmax(axis=1)
-    chars: list[str] = []
-    confs: list[float] = []
-    prev = BLANK
-    for t, idx in enumerate(best):
-        if idx != BLANK and idx != prev:
-            chars.append(IDX_TO_CHAR[int(idx)])
-            confs.append(float(probs[t, idx]))
-        prev = idx
-    seq_conf = float(np.mean(confs)) if confs else 1.0
-    return "".join(chars), confs, seq_conf
-
-
-def _softmax(logits: np.ndarray) -> np.ndarray:
-    z = logits - logits.max(axis=1, keepdims=True)
-    e = np.exp(z)
-    return e / e.sum(axis=1, keepdims=True)
+__all__ = ["CRNN", "BLANK", "INPUT_H", "N_LOGITS", "greedy_decode"]
