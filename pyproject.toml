@@ -1,0 +1,49 @@
+[project]
+name = "micr-ocr"
+version = "0.1.0"
+description = "MICR (E-13B) check magnetic-ink OCR: synthetic data, CRNN+CTC recognizer, YOLO11n band detector, confidence routing, ONNX serving"
+readme = "README.md"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+    "fastapi>=0.115",
+    "uvicorn[standard]>=0.30",
+    "onnxruntime>=1.20",
+    "opencv-python-headless>=4.10",
+    "numpy>=2.1",
+    "pillow>=10.4",
+    "python-multipart>=0.0.12",
+]
+
+# Serving (main deps above) stays slim and torch-free. Heavy training/baseline
+# deps live in non-default groups so `uv sync --no-dev` ships only the runtime.
+[dependency-groups]
+dev = [
+    "httpx>=0.28",
+    "pytest>=8.3",
+]
+train = [
+    "torch>=2.4",
+    "torchvision>=0.19",
+    "ultralytics>=8.3",
+    "scipy>=1.14",
+    "matplotlib>=3.9",
+    "tqdm>=4.66",
+]
+baselines = [
+    "pytesseract>=0.3.13",
+]
+
+# torch/torchvision come from the CUDA wheel index (RTX 3050 = Ampere sm_86).
+[[tool.uv.index]]
+name = "pytorch-cu124"
+url = "https://download.pytorch.org/whl/cu124"
+explicit = true
+
+[tool.uv.sources]
+torch = { index = "pytorch-cu124" }
+torchvision = { index = "pytorch-cu124" }
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+addopts = "-q"
+filterwarnings = ["ignore::DeprecationWarning"]
