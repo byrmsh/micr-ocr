@@ -9,7 +9,6 @@ wakes from idle.
 from __future__ import annotations
 
 import io
-import json
 from functools import lru_cache
 from pathlib import Path
 
@@ -18,7 +17,7 @@ from fastapi import FastAPI, File, HTTPException, UploadFile
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse
 from PIL import Image
 
-from app.recognizer import OnnxRecognizer, run_pipeline
+from app.recognizer import OnnxRecognizer, run_pipeline, serving_params
 
 _APP_DIR = Path(__file__).resolve().parent
 _REPO = _APP_DIR.parent
@@ -35,20 +34,11 @@ app = FastAPI(
 
 
 @lru_cache(maxsize=1)
-def _calib() -> dict:
-    return json.loads(_CALIB.read_text()) if _CALIB.exists() else {}
-
-
-@lru_cache(maxsize=1)
-def _recognizer() -> OnnxRecognizer:
+def _serving() -> tuple[OnnxRecognizer, float]:
     if not _MODEL.exists():
         raise HTTPException(503, "model not bundled in this build")
-    return OnnxRecognizer(_MODEL, temperature=float(_calib().get("temperature", 1.0)))
-
-
-@lru_cache(maxsize=1)
-def _threshold() -> float:
-    return float(_calib().get("serving_threshold", 0.5))
+    temperature, threshold = serving_params(_CALIB)
+    return OnnxRecognizer(_MODEL, temperature=temperature), threshold
 
 
 def _load_gray(data: bytes) -> np.ndarray:
@@ -66,7 +56,8 @@ def health() -> dict:
 @app.post("/read")
 async def read(file: UploadFile = File(...)) -> JSONResponse:
     gray = _load_gray(await file.read())
-    res = run_pipeline(gray, _recognizer(), _threshold())
+    rec, thr = _serving()
+    res = run_pipeline(gray, rec, thr)
     return JSONResponse(
         {
             "micr": res.micr,

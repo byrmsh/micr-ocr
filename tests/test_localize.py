@@ -1,14 +1,6 @@
 from app.localize import localize_band
 from app.synth import check
-
-
-def _iou(a, b):
-    ax, ay, aw, ah = a
-    bx, by, bw, bh = b
-    x0, y0 = max(ax, bx), max(ay, by)
-    x1, y1 = min(ax + aw, bx + bw), min(ay + ah, by + bh)
-    inter = max(0, x1 - x0) * max(0, y1 - y0)
-    return inter / (aw * ah + bw * bh - inter + 1e-6)
+from eval.detect_eval import iou
 
 
 def test_localizer_finds_band_in_bottom_region():
@@ -20,7 +12,7 @@ def test_localizer_finds_band_in_bottom_region():
         x, y, w, h = bbox
         assert crop.size > 0
         assert y > img.shape[0] * 0.45  # found in the lower half
-        if _iou(bbox, gt) >= 0.5:
+        if iou(bbox, gt) >= 0.5:
             hits += 1
     assert hits >= 5  # classical localizer is a baseline, not perfect
 

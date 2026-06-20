@@ -8,20 +8,16 @@ Run: python -m train.yolo.make_yolo_data
 from __future__ import annotations
 
 import argparse
-import hashlib
 import multiprocessing as mp
 from pathlib import Path
 
 import cv2
 
 from app.synth import check
+from app.synth.dataset import _seed  # shared deterministic seed; keep split families reproducible
 
 _REPO = Path(__file__).resolve().parents[2]
 OUT = _REPO / "datasets" / "yolo_micr"
-
-
-def _seed(ns: str, i: int) -> int:
-    return int.from_bytes(hashlib.sha256(f"{ns}:{i}".encode()).digest()[:8], "big")
 
 
 def _one(task: tuple[str, int, str, bool]) -> None:

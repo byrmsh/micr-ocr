@@ -91,7 +91,7 @@ def _atlas() -> dict[str, np.ndarray]:
     return atlas
 
 
-@lru_cache(maxsize=256)
+@lru_cache(maxsize=512)  # 14 glyphs x up to ~27 band heights (heldout) exceeds 256, would thrash
 def glyph_ink(token: str, height_px: int) -> np.ndarray:
     """Ink-coverage array in [0,1] for one glyph, scaled so the full cell is height_px tall.
 

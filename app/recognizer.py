@@ -8,6 +8,7 @@ per_char_confidences, sequence_confidence).
 
 from __future__ import annotations
 
+import json
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Callable
@@ -20,6 +21,19 @@ from app.localize import localize_band
 from app.synth.micr import parse_fields
 
 Recognizer = Callable[[np.ndarray], tuple[str, list[float], float]]
+
+_DEFAULT_CALIB = Path(__file__).resolve().parents[1] / "models" / "calibration.json"
+
+
+def serving_params(calib_path: Path = _DEFAULT_CALIB) -> tuple[float, float]:
+    """(temperature, route_threshold) for serving, read from the calibration json.
+
+    Single source of truth so the live `/read` path and the demo's pre-computed results
+    threshold confidence in the same temperature-scaled space the curve was fit in.
+    Falls back to (1.0, 0.5) when uncalibrated so the pipeline still runs.
+    """
+    calib = json.loads(Path(calib_path).read_text()) if Path(calib_path).exists() else {}
+    return float(calib.get("temperature", 1.0)), float(calib.get("serving_threshold", 0.5))
 
 
 def preprocess_band(gray: np.ndarray) -> np.ndarray:
@@ -35,19 +49,17 @@ class MicrResult:
     micr: str
     fields: dict[str, str | None]
     confidence: float
-    per_char: list[float]
     route_to_human: bool
     band_bbox: tuple[int, int, int, int]
 
 
 def run_pipeline(gray: np.ndarray, recognizer: Recognizer, route_threshold: float = 0.5) -> MicrResult:
     crop, bbox = localize_band(gray)
-    text, confs, conf = recognizer(crop)
+    text, _, conf = recognizer(crop)
     return MicrResult(
         micr=text,
         fields=parse_fields(text),
         confidence=conf,
-        per_char=confs,
         route_to_human=conf < route_threshold,
         band_bbox=bbox,
     )

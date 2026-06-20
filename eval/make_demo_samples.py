@@ -15,18 +15,13 @@ from pathlib import Path
 import cv2
 import numpy as np
 
-from app.recognizer import OnnxRecognizer, run_pipeline
+from app.recognizer import OnnxRecognizer, run_pipeline, serving_params
 from app.synth import check, dataset
 from app.synth.config import TRAIN_CONFIG
 
 _REPO = Path(__file__).resolve().parents[1]
 SAMPLES = _REPO / "samples"
 REAL = _REPO / "assets" / "real_samples"
-
-
-def _calib() -> dict:
-    p = _REPO / "models" / "calibration.json"
-    return json.loads(p.read_text()) if p.exists() else {}
 
 
 def _save(name: str, gray: np.ndarray) -> str:
@@ -36,9 +31,8 @@ def _save(name: str, gray: np.ndarray) -> str:
 
 
 def main() -> None:
-    calib = _calib()
-    rec = OnnxRecognizer(_REPO / "models" / "onnx" / "crnn.onnx", temperature=float(calib.get("temperature", 1.0)))
-    thr = float(calib.get("serving_threshold", 0.5))
+    temperature, thr = serving_params()
+    rec = OnnxRecognizer(_REPO / "models" / "onnx" / "crnn.onnx", temperature=temperature)
     entries: list[dict] = []
 
     synth = [

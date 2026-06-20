@@ -55,14 +55,13 @@ def main() -> None:
     args = ap.parse_args()
 
     images = sorted((args.val / "images" / "val").glob("*.png"))[: args.limit]
-    gts, grays = [], []
-    for img_path in images:
+    gts, classical = [], []
+    for img_path in images:  # stream: the classical pass is the only consumer of the pixels
         gray = cv2.imread(str(img_path), cv2.IMREAD_GRAYSCALE)
         h, w = gray.shape
-        gts.append(_gt_bbox(args.val / "labels" / "val" / f"{img_path.stem}.txt", w, h))
-        grays.append(gray)
-
-    classical = [iou(localize_band(g)[1], gt) for g, gt in zip(grays, gts)]
+        gt = _gt_bbox(args.val / "labels" / "val" / f"{img_path.stem}.txt", w, h)
+        gts.append(gt)
+        classical.append(iou(localize_band(gray)[1], gt))
     _summary("classical", classical)
 
     if args.weights.exists():
