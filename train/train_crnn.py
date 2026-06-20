@@ -31,7 +31,7 @@ def main() -> None:
     args = ap.parse_args()
 
     device = "cuda" if torch.cuda.is_available() else "cpu"
-    train_ds = MicrDataset(args.data, "train")
+    train_ds = MicrDataset(args.data, "train", augment=True)
     val_ds = MicrDataset(args.data, "val")
     sampler = WidthBatchSampler(train_ds.widths, args.batch, shuffle=True)
     loader = DataLoader(

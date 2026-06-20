@@ -21,23 +21,43 @@ from app.synth.glyphs import CHAR_TO_IDX
 
 
 class MicrDataset(Dataset):
-    def __init__(self, data_dir: str | Path, split: str, input_h: int = INPUT_H):
+    def __init__(self, data_dir: str | Path, split: str, input_h: int = INPUT_H, augment: bool = False):
         self.dir = Path(data_dir)
         self.h = input_h
+        self.augment = augment
         with (self.dir / f"{split}.jsonl").open() as f:
             self.items = [json.loads(line) for line in f]
         scale = input_h / STORE_H
         self.widths = [max(input_h, round(it["w"] * scale)) for it in self.items]
+
+    def _crop_jitter(self, arr: np.ndarray) -> np.ndarray:
+        """Random crop between the ink bbox (tight) and the full image (loose), per side.
+
+        Makes the recognizer robust to how much margin the detector leaves, without ever
+        cutting a glyph. This is the main lever closing the band-only vs end-to-end gap.
+        """
+        ys, xs = np.where(arr < 200)
+        if len(xs) == 0:
+            return arr
+        h, w = arr.shape
+        x0i, x1i, y0i, y1i = xs.min(), xs.max(), ys.min(), ys.max()
+        left = np.random.randint(0, x0i + 1)
+        right = np.random.randint(x1i + 1, w + 1)
+        top = np.random.randint(0, y0i + 1)
+        bot = np.random.randint(y1i + 1, h + 1)
+        return arr[top:bot, left:right]
 
     def __len__(self) -> int:
         return len(self.items)
 
     def __getitem__(self, i: int):
         it = self.items[i]
-        img = Image.open(self.dir / it["file"]).convert("L")
-        w = max(self.h, round(img.width * self.h / img.height))
-        img = img.resize((w, self.h), Image.LANCZOS)
-        x = torch.from_numpy(np.asarray(img, np.float32) / 255.0)[None]  # (1,H,W), white=1
+        arr = np.asarray(Image.open(self.dir / it["file"]).convert("L"))
+        if self.augment:
+            arr = self._crop_jitter(arr)
+        w = max(self.h, round(arr.shape[1] * self.h / arr.shape[0]))
+        resized = Image.fromarray(arr).resize((w, self.h), Image.LANCZOS)
+        x = torch.from_numpy(np.asarray(resized, np.float32) / 255.0)[None]  # (1,H,W), white=1
         target = torch.tensor([CHAR_TO_IDX[c] for c in it["label"]], dtype=torch.long)
         return x, target, it["label"], it["tier"]
 

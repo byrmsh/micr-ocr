@@ -42,3 +42,28 @@ def greedy_decode(logits: np.ndarray) -> tuple[str, list[float], float]:
         prev = idx
     seq_conf = float(np.mean(confs)) if confs else 1.0
     return "".join(chars), confs, seq_conf
+
+
+def emitted_logits(logits: np.ndarray) -> tuple[str, np.ndarray]:
+    """Greedy decode returning the logit rows at the emitted timesteps (T_emit, N_LOGITS).
+
+    Keeps the raw logits so confidence can be recomputed at any temperature during
+    calibration without re-running the model.
+    """
+    best = logits.argmax(axis=1)
+    chars: list[str] = []
+    rows: list[np.ndarray] = []
+    prev = BLANK
+    for t, idx in enumerate(best):
+        if idx != BLANK and idx != prev:
+            chars.append(IDX_TO_CHAR[int(idx)])
+            rows.append(logits[t])
+        prev = idx
+    return "".join(chars), (np.array(rows) if rows else np.zeros((0, logits.shape[1])))
+
+
+def seq_conf_at_temp(rows: np.ndarray, temperature: float) -> float:
+    """Mean per-character max-softmax over emitted logit rows at the given temperature."""
+    if len(rows) == 0:
+        return 1.0
+    return float(softmax(rows / temperature).max(axis=1).mean())
