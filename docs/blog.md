@@ -10,15 +10,15 @@ characters.
 
 I built an end-to-end system that reads the E-13B line under that kind of damage: a synthetic
 data generator, a recognizer trained from scratch, a band detector, confidence-based routing
-to a human when the model is unsure, and an ONNX service deployed behind a Cloudflare Worker.
+to a human when the model is unsure, and an ONNX service containerized to run behind a Cloudflare Worker.
 This post is the honest version of how it works and how well it actually does.
 
-> One thing up front, stated plainly because it matters: every number here is measured on a
+> One thing up front: every number here is measured on a
 > synthetic benchmark I generated myself. There are no real customer checks in the training or
 > the metrics (there is a small qualitative test on a handful of public-domain checks at the
 > end). E-13B is a constrained 14-glyph alphabet, so none of this is a claim about
-> general-document OCR. What it is: a real, trained, deployed pipeline with numbers you can
-> reproduce from the repo.
+> general-document OCR. What it is: a real, trained, containerized pipeline with numbers you can
+> reproduce from [the repo](https://github.com/byrmsh/micr-ocr).
 
 ## The font, without a font
 
@@ -96,7 +96,7 @@ Character error rate by tier, in-distribution test split:
 
 Two honest readings of that table. First, stock OCR cannot read this font, full stop; that row
 is a labeled data point, not a baseline anyone is "beating." Second, the classical matcher is
-genuinely competent on clean fixed-pitch MICR (10 percent CER, mostly single-glyph confusions)
+competent on clean fixed-pitch MICR (10 percent CER, mostly single-glyph confusions)
 and then collapses the moment skew, overlap, or low contrast breaks the pitch grid. That
 collapse is the whole reason a sequence model earns its place: it does not depend on finding
 clean character boundaries.
@@ -119,16 +119,16 @@ an operating threshold off the coverage-accuracy curve.
 
 The raw signal is bunched near 1.0, so out of the box you cannot threshold it usefully. A
 temperature of 2.4 spreads the scores enough that the coverage-accuracy tradeoff becomes
-usable. Worth being honest about: the temperature barely moves the expected calibration error
-(about 0.056 raw, 0.067 after), because this peaky, blank-dominated CTC confidence is genuinely
-hard to calibrate in the strict sense. The useful artifact is not a magically calibrated
+usable. The temperature barely moves the expected calibration error
+(about 0.056 raw, 0.067 after), because this peaky, blank-dominated CTC confidence resists
+strict calibration. The useful artifact is not a magically calibrated
 probability, it is the tradeoff curve. On the held-out generator, 92.1 percent of lines are
 correct with no routing; routing the least-confident 6 percent to a human raises auto-accept
 accuracy to 96.9 percent; a balanced operating point routes about 13 percent and auto-accepts
 the rest at 97.8 percent; and if you need near-certainty you can auto-accept only the most
-confident quarter at 99.8 percent and send everything else to review. The deployed service ships the
+confident quarter at 99.8 percent and send everything else to review. The service ships the
 balanced point: a read auto-accepts when its temperature-scaled confidence clears 0.92, and everything
-below that is flagged for a person. One consequence worth stating, because it is easy to get wrong: the
+below that is flagged for a person. One consequence is easy to get wrong: the
 confidence the API returns is the calibrated number, computed at the fitted temperature, not the raw
 peaky softmax, so the threshold is applied in the same space the curve was drawn in.
 
@@ -181,20 +181,25 @@ torch and no Ultralytics, which keeps the image small and the cold start short. 
 serving dependencies are split into separate groups precisely so the heavy half never reaches
 the image.
 
-It is deployed the same way as my other small services: a Cloudflare Worker as the HTTP front
-door routing to a Durable-Object-backed container. The demo page ships pre-computed results for
-its sample images, so the first click returns instantly even while the container is waking from
-idle. You POST an image (a full check or a cropped band) to `/read` and get back the recognized
-line, the parsed fields, a confidence, a route-to-human flag, and the band's bounding box.
+It is packaged to deploy the same way as my other small services: a Cloudflare Worker as the
+HTTP front door routing to a Durable-Object-backed container. You POST an image (a full check
+or a cropped band) to `/read` and get back the recognized line, the parsed fields, a confidence,
+a route-to-human flag, and the band's bounding box. The demo page ships pre-computed results for
+its sample images, so the first click is instant even while the container wakes from idle.
 
-<!-- TODO: live URL once deployed. -->
+I measured the serving image locally rather than keeping an instance running: about 834 MB on
+disk, around 150 MB resident after a read, a 3.2-second cold start to the first health response,
+a first read near 0.3 seconds while the ONNX session loads, and warm reads around 47 milliseconds
+on CPU. The Dockerfile and the Worker shim are in the repo, so it comes up with a single
+`wrangler deploy`. I am not running a public instance of it; this is a portfolio build, and an
+idle OCR endpoint is upkeep without a purpose.
 
 ## What this is not
 
-It is worth being precise about the edges. The accuracy numbers are on synthetic data; the
-synthetic-to-real gap is real and unmeasured at scale here. As a qualitative check I ran the
-pipeline on six public-domain checks from Wikimedia, and the result is the honest one: none of them
-read cleanly end to end, and the confidence layer routed every one to review. On a real scan the
+The accuracy numbers are on synthetic data, and the synthetic-to-real gap is unmeasured at scale
+here. As a qualitative check I ran the pipeline on six public-domain checks from Wikimedia, and the
+result is unflattering: none of them read cleanly end to end, and the confidence layer routed every
+one to review. On a real scan the
 classical localizer often locks onto the wrong row, and where it does find the band the recognizer
 stumbles on the distance between my synthetic font and real magnetic-ink printing. That the routing
 flagged all six is the system behaving as intended when it is out of distribution; it is not the same
@@ -202,10 +207,10 @@ as reading them, and the demo shows these failures rather than hiding them.
 
 E-13B is a small, rigid alphabet, so none of this transfers to general document OCR as-is, and I
 am not claiming it does. The confidence threshold is calibrated on my generator, not a
-production distribution. And the hard tier, the genuinely overlapping handwriting, is where the
+production distribution. And the hard tier, where handwriting overlaps the print, is where the
 model is weakest and where the human-review path is meant to catch it.
 
 What I am comfortable claiming is the engineering: a from-scratch CRNN+CTC recognizer, a
 fine-tuned YOLO11n detector, a license-clean synthetic data pipeline, calibrated confidence with
-human-in-the-loop routing, and an ONNX service deployed on a 4GB budget, all reproducible from
-the repo.
+human-in-the-loop routing, and a torch-free ONNX serving container, all trained on a 4 GB GPU
+and reproducible from [the repo](https://github.com/byrmsh/micr-ocr).
